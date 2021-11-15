@@ -132,19 +132,45 @@ namespace SoftwareEngineersBlog.Services.Concrete
             return new Result(ResultStatus.Success, $"The Article Named {articleAddDto.Title} Added With Successful. ");
         }
 
-        public Task<IResult> Update(ArticleUpdateDto articleAddDtoUpdateDto, string modifiedByName)
+        public async Task<IResult> Update(ArticleUpdateDto articleUpdateDto, string modifiedByName)
         {
-            throw new NotImplementedException();
+            var article = _mapper.Map<Article>(articleUpdateDto);
+            article.ModifiedByName = modifiedByName;
+            await _unitOfWork.Articles.UpdateAsync(article).ContinueWith(t => _unitOfWork.SaveAsync());
+            return new Result(ResultStatus.Success, $"The Article Named {articleUpdateDto.Title} Updated With Successful. ");
         }
 
-        public Task<IResult> Delete(int articleId, string modifiedByName)
+        public async Task<IResult> Delete(int articleId, string modifiedByName)
         {
-            throw new NotImplementedException();
+            var result = await _unitOfWork.Articles.AnyAsync(a => a.Id == articleId);
+            if (result)
+            {
+                var article = await _unitOfWork.Articles.GetAsync(a => a.Id == articleId);
+                article.IsDeleted = true;
+                article.ModifiedByName = modifiedByName;
+                article.ModifiedDate = DateTime.Now;
+                await _unitOfWork.Articles.UpdateAsync(article).ContinueWith(t => _unitOfWork.SaveAsync());
+                return new Result(ResultStatus.Success, $"The Article Named {article.Title} Deleted With Successful. ");
+            }
+            else
+            {
+                return new DataResult<ArticleListDto>(ResultStatus.Error, "The Article Could Not Found.", null);
+            }
         }
 
-        public Task<IResult> HardDelete(int articleId)
+        public async Task<IResult> HardDelete(int articleId)
         {
-            throw new NotImplementedException();
+            var result = await _unitOfWork.Articles.AnyAsync(a => a.Id == articleId);
+            if (result)
+            {
+                var article = await _unitOfWork.Articles.GetAsync(a => a.Id == articleId);
+                await _unitOfWork.Articles.DeleteAsync(article).ContinueWith(t => _unitOfWork.SaveAsync());
+                return new Result(ResultStatus.Success, $"The Article Named {article.Title} Deleted With Successful From The Database. ");
+            }
+            else
+            {
+                return new DataResult<ArticleListDto>(ResultStatus.Error, "The Article Could Not Found.", null);
+            }
         }
     }
 }
