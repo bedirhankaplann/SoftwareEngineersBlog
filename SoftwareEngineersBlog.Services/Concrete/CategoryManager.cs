@@ -56,7 +56,12 @@ namespace SoftwareEngineersBlog.Services.Concrete
             }
             else
             {
-                return new DataResult<CategoryListDto>(ResultStatus.Error, "Categories Not Found.", null);
+                return new DataResult<CategoryListDto>(ResultStatus.Error, "Categories Not Found.", new CategoryListDto
+                {
+                    Categories = null,
+                    ResultStatus = ResultStatus.Error,
+                    Message = "Categories Not Found."
+                });
             }
         }
 
@@ -99,11 +104,13 @@ namespace SoftwareEngineersBlog.Services.Concrete
             var category = _mapper.Map<Category>(categoryAddDto);
             category.CreatedByName = createByName;
             category.ModifiedByName = createByName;
-            await _unitOfWork.Categories.AddAsync(category).ContinueWith(t => _unitOfWork.SaveAsync());
+            await _unitOfWork.Categories.AddAsync(category);
+            await _unitOfWork.SaveAsync();
+
+            //.ContinueWith(t => _unitOfWork.SaveAsync());
             //ContinueWith ile işlerken bitirdiği gibi zincirleme şekilde yapıyor. Çok hızlı işlem yapıyor.
             //Ancak yönetimi biraz daha zorlaştırıyor.
-
-            //await _unitOfWork.SaveAsync();
+;
             return new Result(ResultStatus.Success,
                 $"The Category Named {categoryAddDto.Name} Has Been Successfully Added.", null);
         }
@@ -113,7 +120,8 @@ namespace SoftwareEngineersBlog.Services.Concrete
 
             var category = _mapper.Map<Category>(categoryUpdateDto);
             category.ModifiedByName = modifiedByName;
-            await _unitOfWork.Categories.UpdateAsync(category).ContinueWith(t => _unitOfWork.SaveAsync());
+            await _unitOfWork.Categories.UpdateAsync(category);
+            await _unitOfWork.SaveAsync();
 
             return new Result(ResultStatus.Success,
                     $"The Category Named {categoryUpdateDto.Name} Has Been Successfully Added.", null);
@@ -128,7 +136,8 @@ namespace SoftwareEngineersBlog.Services.Concrete
                 category.IsDeleted = true;
                 category.ModifiedByName = modifiedByName;
                 category.ModifiedDate = DateTime.Now;
-                await _unitOfWork.Categories.UpdateAsync(category).ContinueWith(t => _unitOfWork.SaveAsync());
+                await _unitOfWork.Categories.UpdateAsync(category);
+                await _unitOfWork.SaveAsync();
 
                 return new Result(ResultStatus.Success,
                     $"The Category Named {category.Name} Has Been Successfully Deleted.", null);
@@ -144,8 +153,8 @@ namespace SoftwareEngineersBlog.Services.Concrete
             var category = await _unitOfWork.Categories.GetAsync(c => c.Id == categoryId);
             if (category != null)
             {
-                await _unitOfWork.Categories.DeleteAsync(category).ContinueWith(t => _unitOfWork.SaveAsync());
-                await _unitOfWork.Categories.UpdateAsync(category).ContinueWith(t => _unitOfWork.SaveAsync());
+                await _unitOfWork.Categories.DeleteAsync(category);
+                await _unitOfWork.SaveAsync();
 
                 return new Result(ResultStatus.Success,
                     $"The Category Named {category.Name} Has Been Successfully Deleted From Database.", null);

@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using SoftwareEngineersBlog.Services.AutoMapper.Profiles;
 using SoftwareEngineersBlog.Services.Extensions;
 
 namespace SoftwareEngineersBlog.MVC
@@ -18,7 +19,7 @@ namespace SoftwareEngineersBlog.MVC
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews().AddRazorRuntimeCompilation();
-            services.AddAutoMapper(typeof(Startup));
+            services.AddAutoMapper(typeof(CategoryProfile), typeof(ArticleProfile));
             services.LoadMyServices();
         }
 
