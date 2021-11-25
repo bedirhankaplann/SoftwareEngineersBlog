@@ -38,7 +38,12 @@ namespace SoftwareEngineersBlog.Services.Concrete
             }
             else
             {
-                return new DataResult<CategoryDto>(ResultStatus.Error, "Category Not Found.",null );
+                return new DataResult<CategoryDto>(ResultStatus.Error, "Category Not Found.",new CategoryDto
+                {
+                    Category = null,
+                    ResultStatus = ResultStatus.Error,
+                    Message = "Category Not Found."
+                } );
             }
         }
 
@@ -99,33 +104,42 @@ namespace SoftwareEngineersBlog.Services.Concrete
             }
         }
 
-        public async Task<IResult> Add(CategoryAddDto categoryAddDto, string createByName)
+        public async Task<IDataResult<CategoryDto>> Add(CategoryAddDto categoryAddDto, string createByName)
         {
             var category = _mapper.Map<Category>(categoryAddDto);
             category.CreatedByName = createByName;
             category.ModifiedByName = createByName;
-            await _unitOfWork.Categories.AddAsync(category);
+            var addedCategory = await _unitOfWork.Categories.AddAsync(category);
             await _unitOfWork.SaveAsync();
 
             //.ContinueWith(t => _unitOfWork.SaveAsync());
             //ContinueWith ile işlerken bitirdiği gibi zincirleme şekilde yapıyor. Çok hızlı işlem yapıyor.
             //Ancak yönetimi biraz daha zorlaştırıyor.
 ;
-            return new Result(ResultStatus.Success,
-                $"The Category Named {categoryAddDto.Name} Has Been Successfully Added.", null);
+            return new DataResult<CategoryDto>(ResultStatus.Success,
+                $"The Category Named {categoryAddDto.Name} Has Been Successfully Added.", new CategoryDto
+                {
+                    Category = addedCategory,
+                    ResultStatus = ResultStatus.Success,
+                    Message = $"The Category Named {categoryAddDto.Name} Has Been Successfully Added."
+                });
         }
 
-        public async Task<IResult> Update(CategoryUpdateDto categoryUpdateDto, string modifiedByName)
+        public async Task<IDataResult<CategoryDto>> Update(CategoryUpdateDto categoryUpdateDto, string modifiedByName)
         {
 
             var category = _mapper.Map<Category>(categoryUpdateDto);
             category.ModifiedByName = modifiedByName;
-            await _unitOfWork.Categories.UpdateAsync(category);
+            var updatedCategory = await _unitOfWork.Categories.UpdateAsync(category);
             await _unitOfWork.SaveAsync();
 
-            return new Result(ResultStatus.Success,
-                    $"The Category Named {categoryUpdateDto.Name} Has Been Successfully Added.", null);
-
+            return new DataResult<CategoryDto>(ResultStatus.Success,
+                    $"The Category Named {categoryUpdateDto.Name} Has Been Successfully Added.", new CategoryDto
+                    {
+                        Category = updatedCategory,
+                        ResultStatus = ResultStatus.Success,
+                        Message = $"The Category Named {categoryUpdateDto.Name} Has Been Successfully Added."
+                    });
         }
 
         public async Task<IResult> Delete(int categoryId, string modifiedByName)
